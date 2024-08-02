@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 
+	"go.viam.com/rdk/components/generic"
 	"go.viam.com/rdk/logging"
 	"go.viam.com/rdk/module"
-	"go.viam.com/rdk/services/generic"
 
 	"github.com/erh/viampets"
 )

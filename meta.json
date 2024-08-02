@@ -1,0 +1,14 @@
+{
+  "$schema": "https://dl.viam.dev/module.schema.json",
+  "module_id": "erh:viampets",
+  "visibility": "public",
+  "url": "https://github.com/erh/viampets",
+  "description": "various pet things",
+  "models": [
+    {
+      "api": "rdk:component:generic",
+      "model": "erh:viampets:feeder"
+    }
+  ],
+  "entrypoint": "./viampet"
+}

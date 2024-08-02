@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"go.viam.com/rdk/components/generic"
 	"go.viam.com/rdk/components/motor"
 	"go.viam.com/rdk/logging"
 	"go.viam.com/rdk/resource"
-	"go.viam.com/rdk/services/generic"
 	"go.viam.com/utils"
 )
 
