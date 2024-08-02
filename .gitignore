@@ -8,6 +8,7 @@
 *.so
 *.dylib
 bin/
+module.tar.gz
 
 # Test binary, built with `go test -c`
 *.test
@@ -27,3 +28,5 @@ go.work.sum
 
 *~
 *.swp
+
+
