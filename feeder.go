@@ -65,6 +65,13 @@ func newFeeder(ctx context.Context, deps resource.Dependencies, config resource.
 
 	f := &feeder{config: newConf, name: config.ResourceName(), logger: logger}
 
+	m, err := deps.Lookup(motor.Named(f.config.Motor))
+	if err != nil {
+		return nil, err
+	}
+
+	f.theMotor = m.(motor.Motor)
+
 	return f, nil
 }
 
