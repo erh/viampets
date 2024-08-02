@@ -14,4 +14,4 @@ updaterdk:
 	go mod tidy
 
 module: bin/viampet
-	tar czf module.tar.gz bin/viampet
+	tar czf module.tar.gz bin/viampet meta.json
