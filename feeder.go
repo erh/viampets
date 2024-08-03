@@ -29,7 +29,29 @@ type feederConfig struct {
 	Camera string
 	Vision string
 
-	SecondsToFeed float64 `json:"seconds_to_feed"`
+	SecondsToFeed       float64 `json:"seconds_to_feed"`
+	MinutesBetweenFeeds int     `json:"minutes_between_feeds"`
+	StartHour           int     `json:"start_hour"`
+	EndHour             int     `json:"start_hour"`
+}
+
+func (cfg *feederConfig) fix() {
+	if cfg.MinutesBetweenFeeds <= 0 {
+		cfg.MinutesBetweenFeeds = 60
+	}
+
+	if cfg.SecondsToFeed <= 0 {
+		cfg.SecondsToFeed = 3
+	}
+
+	if cfg.StartHour <= 0 {
+		cfg.StartHour = 7
+	}
+
+	if cfg.EndHour <= 0 {
+		cfg.EndHour = 25
+	}
+
 }
 
 func (cfg feederConfig) Validate(path string) ([]string, error) {
@@ -64,6 +86,8 @@ type feeder struct {
 	theVisionService vision.Service
 
 	debug map[string]interface{}
+
+	lastFed time.Time
 }
 
 func newFeeder(ctx context.Context, deps resource.Dependencies, config resource.Config, logger logging.Logger) (resource.Resource, error) {
@@ -71,6 +95,7 @@ func newFeeder(ctx context.Context, deps resource.Dependencies, config resource.
 	if err != nil {
 		return nil, err
 	}
+	newConf.fix()
 
 	f := &feeder{config: newConf, name: config.ResourceName(), logger: logger, debug: map[string]interface{}{}}
 
@@ -86,6 +111,8 @@ func newFeeder(ctx context.Context, deps resource.Dependencies, config resource.
 	}
 	f.theVisionService = s.(vision.Service)
 
+	go f.run()
+
 	return f, nil
 }
 
@@ -95,6 +122,36 @@ func (f *feeder) Name() resource.Name {
 
 func (f *feeder) run() {
 	f.backgroundContext, f.backgroundCancel = context.WithCancel(context.Background())
+
+	for {
+		err := f.doLoop(f.backgroundContext)
+		if err != nil {
+			f.logger.Errorf("error doing feeder loop: %v", err)
+		}
+
+		if !utils.SelectContextOrWait(f.backgroundContext, time.Minute) {
+			f.logger.Errorf("stopping feeder")
+			return
+		}
+	}
+}
+
+func (f *feeder) doLoop(ctx context.Context) error {
+	f.logger.Infof("feeder doLoop called")
+	if time.Since(f.lastFed) < time.Duration((time.Minute * time.Duration(f.config.MinutesBetweenFeeds))) {
+		f.logger.Infof("not feeding because fed @ %v", f.lastFed)
+		return nil
+	}
+
+	now := time.Now()
+	if now.Hour() < f.config.StartHour || now.Hour() >= f.config.EndHour {
+		f.logger.Infof("not feeding because not in window %v < %v <= v", f.config.StartHour, now.Hour(), f.config.EndHour)
+		return nil
+	}
+
+	f.logger.Infof("checking bowl")
+	_, err := f.check(ctx)
+	return err
 }
 
 func (f *feeder) feed(ctx context.Context) error {
@@ -102,9 +159,9 @@ func (f *feeder) feed(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if f.config.SecondsToFeed <= 0 {
-		f.config.SecondsToFeed = 3
-	}
+
+	f.lastFed = time.Now()
+
 	time.Sleep(time.Duration(float64(time.Second) * f.config.SecondsToFeed))
 	return f.theMotor.Stop(ctx, nil)
 }
@@ -125,14 +182,20 @@ func (f *feeder) check(ctx context.Context) (bool, error) {
 		return false, fmt.Errorf("wrong num of classifications %v", res)
 	}
 
+	f.logger.Infof("classification result %v", res[0])
+
 	if res[0].Label() != "empty" || res[0].Score() < .25 {
 		f.debug["fed"] = false
 		return false, nil
 	}
 
+	f.logger.Infof("feeding")
+
 	f.debug["fed"] = true
 	err = f.feed(ctx)
-	f.debug["err"] = err
+	if err != nil {
+		f.debug["err"] = err
+	}
 	return true, err
 }
 
