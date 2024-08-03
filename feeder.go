@@ -129,7 +129,7 @@ func (f *feeder) run() {
 			f.logger.Errorf("error doing feeder loop: %v", err)
 		}
 
-		if !utils.SelectContextOrWait(f.backgroundContext, time.Minute) {
+		if !utils.SelectContextOrWait(f.backgroundContext, 10 * time.Minute) {
 			f.logger.Errorf("stopping feeder")
 			return
 		}
