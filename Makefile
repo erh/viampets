@@ -1,6 +1,7 @@
 
-bin/viampet: *.go cmd/module/*.go *.mod
-	-mkdir bin
+
+
+bin/viampet: bin *.go cmd/module/*.go *.mod
 	go build -o bin/viampet cmd/module/cmd.go
 
 test:
@@ -15,3 +16,6 @@ updaterdk:
 
 module: bin/viampet
 	tar czf module.tar.gz bin/viampet meta.json
+
+bin:
+	-mkdir bin
