@@ -1,6 +1,6 @@
 # viamcatfeeder
 
-sample config
+## sample config
 ```
 {
   "seconds_to_feed": 1,
