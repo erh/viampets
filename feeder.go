@@ -32,7 +32,7 @@ type feederConfig struct {
 	SecondsToFeed       float64 `json:"seconds_to_feed"`
 	MinutesBetweenFeeds int     `json:"minutes_between_feeds"`
 	StartHour           int     `json:"start_hour"`
-	EndHour             int     `json:"start_hour"`
+	EndHour             int     `json:"end_hour"`
 }
 
 func (cfg *feederConfig) fix() {
@@ -129,7 +129,7 @@ func (f *feeder) run() {
 			f.logger.Errorf("error doing feeder loop: %v", err)
 		}
 
-		if !utils.SelectContextOrWait(f.backgroundContext, 10 * time.Minute) {
+		if !utils.SelectContextOrWait(f.backgroundContext, 10*time.Minute) {
 			f.logger.Errorf("stopping feeder")
 			return
 		}

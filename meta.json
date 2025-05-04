@@ -7,7 +7,10 @@
     "models": [
         {
             "api": "rdk:component:generic",
-            "model": "erh:viampets:feeder"
+            "model": "erh:viampets:feeder",
+            "markdown_link": "README.md#sample-config",
+            "short_description": "feed your pets"
+
         }
     ],
     "entrypoint": "./bin/viampet",
